@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopZen – Discover Fashion</title>
+  <meta name="description" content="Discover the latest fashion trends. Shop Men, Women & Kids collections." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c28; --border: #2a2a3d;
+      --text: #f0f0ff; --muted: #8888aa; --accent: #7c3aed; --accent2: #a855f7;
+      --pink: #ec4899; --blue: #3b82f6; --green: #10b981; --gold: #f59e0b;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+    /* ── AUTH SCREENS ── */
+    .auth-screen {
+      display: none; min-height: 100vh; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 30% 20%, #7c3aed22 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 80%, #ec489922 0%, transparent 60%), var(--bg);
+    }
+    .auth-screen.active { display: flex; }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      padding: 48px 40px; width: 100%; max-width: 440px;
+      box-shadow: 0 30px 80px #00000080;
+      animation: slideUp .4s ease;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .auth-logo { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .auth-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+    .auth-tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .auth-tab { flex: 1; text-align: center; padding: 10px; border-radius: 9px; font-size: 14px; font-weight: 600;
+      cursor: pointer; color: var(--muted); transition: all .2s; }
+    .auth-tab.active { background: var(--accent); color: #fff; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .field input { width: 100%; padding: 13px 16px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border-color .2s; }
+    .field input:focus { border-color: var(--accent2); }
+    .btn-auth { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity .2s, transform .15s; margin-top: 8px;
+      box-shadow: 0 4px 20px #7c3aed40; }
+    .btn-auth:hover { opacity: .9; transform: translateY(-1px); }
+    .auth-error { color: #f87171; font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+    .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+    .auth-footer a { color: var(--accent2); cursor: pointer; font-weight: 600; }
+
+    /* ── APP SCREEN ── */
+    #app-screen { display: none; }
+    #app-screen.active { display: block; }
+
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #0a0a0fcc; backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted);
+      cursor: pointer; transition: all .2s; border: none; background: none; font-family: 'Inter', sans-serif; }
+    .nav-link:hover { color: var(--text); background: var(--surface2); }
+    .nav-link.active { color: var(--text); background: var(--surface); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+    .btn-logout { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: none;
+      color: var(--muted); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .2s; }
+    .btn-logout:hover { border-color: var(--pink); color: var(--pink); }
+    .cart-btn { position: relative; padding: 8px 16px; border-radius: 8px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all .2s; }
+    .cart-btn:hover { border-color: var(--accent2); }
+    .cart-badge { position: absolute; top: -6px; right: -6px; background: var(--pink); color: #fff;
+      border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; }
+
+    /* Pages */
+    .page { display: none; padding: 40px; }
+    .page.active { display: block; }
+
+    /* Hero */
+    .hero {
+      border-radius: 24px; overflow: hidden; position: relative;
+      background: linear-gradient(135deg, #1a0533 0%, #0f0f2d 50%, #1a1a0a 100%);
+      padding: 80px 60px; margin-bottom: 48px;
+      border: 1px solid var(--border);
+    }
+    .hero::before { content: ''; position: absolute; top: -50%; right: -10%; width: 500px; height: 500px;
+      background: radial-gradient(circle, #7c3aed30 0%, transparent 70%); border-radius: 50%; }
+    .hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent2); margin-bottom: 16px; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; line-height: 1.1;
+      margin-bottom: 20px; max-width: 600px; }
+    .hero-title span { background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 17px; color: var(--muted); max-width: 480px; line-height: 1.6; margin-bottom: 36px; }
+    .hero-actions { display: flex; gap: 12px; }
+    .btn-hero { padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all .2s; border: none; }
+    .btn-hero.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+      box-shadow: 0 4px 20px #7c3aed40; }
+    .btn-hero.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px #7c3aed50; }
+    .btn-hero.outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-hero.outline:hover { border-color: var(--accent2); color: var(--accent2); }
+    .hero-stats { display: flex; gap: 40px; margin-top: 48px; }
+    .hero-stat-val { font-size: 28px; font-weight: 800; color: var(--text); }
+    .hero-stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* Section */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .section-title { font-size: 22px; font-weight: 700; }
+    .section-title span { background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .see-all { font-size: 13px; color: var(--accent2); cursor: pointer; font-weight: 600;
+      padding: 6px 14px; border: 1px solid var(--border); border-radius: 8px; background: none;
+      font-family: 'Inter', sans-serif; transition: all .2s; }
+    .see-all:hover { background: var(--surface2); }
+
+    /* Trends */
+    .trends-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+    .trend-card { border-radius: 16px; padding: 24px; position: relative; overflow: hidden; cursor: pointer;
+      transition: transform .3s; border: 1px solid var(--border); }
+    .trend-card:hover { transform: translateY(-4px); }
+    .trend-card.men { background: linear-gradient(135deg, #1e3a5f, #0f172a); }
+    .trend-card.women { background: linear-gradient(135deg, #4c1d95, #1a0533); }
+    .trend-card.kids { background: linear-gradient(135deg, #065f46, #0f172a); }
+    .trend-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+    .trend-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .trend-count { font-size: 13px; color: var(--muted); }
+    .trend-emoji { position: absolute; right: 20px; top: 20px; font-size: 40px; opacity: .6; }
+
+    /* Products */
+    .filters { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .2s; }
+    .filter-btn.active, .filter-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+    .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      transition: transform .3s, box-shadow .3s; cursor: pointer; }
+    .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px #00000060; }
+    .product-img { width: 100%; height: 220px; background: var(--surface2); overflow: hidden; position: relative; }
+    .product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .product-card:hover .product-img img { transform: scale(1.07); }
+    .bestseller-badge { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, var(--gold), #ef4444);
+      color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .product-info { padding: 18px; }
+    .product-cat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--accent2); margin-bottom: 6px; }
+    .product-name { font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+    .product-price { font-size: 20px; font-weight: 800; color: var(--text); }
+    .product-price .currency { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .product-actions { padding: 0 18px 18px; display: flex; gap: 10px; }
+    .btn-add-cart { flex: 1; padding: 11px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity .2s; }
+    .btn-add-cart:hover { opacity: .85; }
+    .btn-wishlist { padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; font-size: 16px; transition: all .2s; }
+    .btn-wishlist:hover { border-color: var(--pink); color: var(--pink); }
+
+    /* Size picker modal */
+    .modal-overlay { position: fixed; inset: 0; background: #00000080; backdrop-filter: blur(4px); z-index: 200;
+      display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 380px;
+      box-shadow: 0 30px 80px #00000080; animation: slideUp .3s ease; }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .modal-sizes { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .modal-size { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
+    .modal-size.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-confirm { flex: 1; padding: 13px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .modal-cancel { padding: 13px 20px; border-radius: 10px; border: 1px solid var(--border); background: none;
+      color: var(--muted); font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 20px; font-size: 14px; font-weight: 600; z-index: 999;
+      transform: translateY(80px); opacity: 0; transition: all .3s; box-shadow: 0 8px 30px #00000060; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error { border-left: 3px solid #ef4444; }
+
+    /* Loading */
+    .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--accent2); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-center { display: flex; align-items: center; justify-content: center; padding: 60px; gap: 14px; color: var(--muted); }
+    .empty-state { text-align: center; padding: 60px 40px; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .empty-state p { color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 0 16px; }
+      .page { padding: 20px 16px; }
+      .hero { padding: 40px 24px; }
+      .hero-title { font-size: 36px; }
+      .trends-grid { grid-template-columns: 1fr; }
+      .products-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .hero-stats { gap: 20px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Size Modal -->
+<div class="modal-overlay" id="size-modal">
+  <div class="modal">
+    <h3 id="modal-product-name">Select Size</h3>
+    <p class="modal-sub">Choose a size to add this item to your cart.</p>
+    <div class="modal-sizes" id="modal-sizes"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmAddToCart()">Add to Cart 🛒</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div class="auth-screen active" id="signup-screen">
+  <div class="auth-card">
+    <div class="auth-logo">ShopZen</div>
+    <p class="auth-sub">Discover premium fashion, curated for you.</p>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('signup')">Create Account</div>
+      <div class="auth-tab" onclick="switchTab('login')">Sign In</div>
+    </div>
+    <div id="signup-form">
+      <div class="field"><label>Full Name</label><input type="text" id="s-name" placeholder="Your name" /></div>
+      <div class="field"><label>Email</label><input type="email" id="s-email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" /></div>
+      <button class="btn-auth" onclick="signup()">Create Account →</button>
+      <div class="auth-error" id="signup-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="auth-screen" id="login-screen">
+  <div class="auth-card">
+    <div class="auth-logo">ShopZen</div>
+    <p class="auth-sub">Welcome back! Sign in to continue.</p>
+    <div class="auth-tabs">
+      <div class="auth-tab" onclick="switchTab('signup')">Create Account</div>
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+    </div>
+    <div id="login-form">
+      <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="Your password" /></div>
+      <button class="btn-auth" onclick="login()">Sign In →</button>
+      <div class="auth-error" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-logo">ShopZen</div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showAppPage('home')" id="nav-home">Home</button>
+      <button class="nav-link" onclick="showAppPage('shop')" id="nav-shop">Shop</button>
+      <button class="nav-link" onclick="showAppPage('trends')" id="nav-trends">Trends</button>
+    </div>
+    <div class="nav-right">
+      <button class="cart-btn" onclick="showAppPage('cart')">
+        🛒 Cart <span class="cart-badge" id="cart-count">0</span>
+      </button>
+      <div class="nav-user">
+        <div class="avatar" id="user-avatar">U</div>
+        <span id="user-name-display" style="font-size:14px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Home Page -->
+  <div class="page active" id="app-home">
+    <div class="hero">
+      <div class="hero-eyebrow">✦ New Season Collection</div>
+      <h1 class="hero-title">Fashion that <span>speaks</span> your story</h1>
+      <p class="hero-sub">Discover curated collections across Men, Women & Kids. Premium quality, unbeatable style.</p>
+      <div class="hero-actions">
+        <button class="btn-hero primary" onclick="showAppPage('shop')">Shop Now →</button>
+        <button class="btn-hero outline" onclick="showAppPage('trends')">View Trends</button>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <div><div class="hero-stat-val" id="hs-products">—</div><div class="hero-stat-label">Products</div></div>
+        <div><div class="hero-stat-val">3</div><div class="hero-stat-label">Categories</div></div>
+        <div><div class="hero-stat-val">⚡</div><div class="hero-stat-label">Fast Delivery</div></div>
+      </div>
+    </div>
+
+    <!-- Trending categories -->
+    <div class="section-header">
+      <div class="section-title">Shop by <span>Category</span></div>
+    </div>
+    <div class="trends-grid">
+      <div class="trend-card men" onclick="filterAndGo('Men')">
+        <div class="trend-emoji">👔</div>
+        <div class="trend-label">Category</div>
+        <div class="trend-title">Men</div>
+        <div class="trend-count" id="count-men">Loading...</div>
+      </div>
+      <div class="trend-card women" onclick="filterAndGo('Women')">
+        <div class="trend-emoji">👗</div>
+        <div class="trend-label">Category</div>
+        <div class="trend-title">Women</div>
+        <div class="trend-count" id="count-women">Loading...</div>
+      </div>
+      <div class="trend-card kids" onclick="filterAndGo('Kids')">
+        <div class="trend-emoji">🧒</div>
+        <div class="trend-label">Category</div>
+        <div class="trend-title">Kids</div>
+        <div class="trend-count" id="count-kids">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Best Sellers -->
+    <div class="section-header">
+      <div class="section-title">⭐ Best <span>Sellers</span></div>
+      <button class="see-all" onclick="filterAndGo('all')">See All</button>
+    </div>
+    <div id="bestsellers-grid" class="products-grid">
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Shop Page -->
+  <div class="page" id="app-shop">
+    <div class="section-header">
+      <div class="section-title">All <span>Products</span></div>
+      <span id="product-count-label" style="color:var(--muted);font-size:14px;"></span>
+    </div>
+    <div class="filters" id="shop-filters">
+      <button class="filter-btn active" onclick="applyFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="applyFilter('Men', this)">Men</button>
+      <button class="filter-btn" onclick="applyFilter('Women', this)">Women</button>
+      <button class="filter-btn" onclick="applyFilter('Kids', this)">Kids</button>
+      <button class="filter-btn" onclick="applyFilter('Topwear', this)">Topwear</button>
+      <button class="filter-btn" onclick="applyFilter('Bottomwear', this)">Bottomwear</button>
+      <button class="filter-btn" onclick="applyFilter('Winterwear', this)">Winterwear</button>
+    </div>
+    <div class="products-grid" id="shop-grid">
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Trends Page -->
+  <div class="page" id="app-trends">
+    <div class="section-header">
+      <div class="section-title">🔥 What's <span>Trending</span></div>
+    </div>
+    <div class="trends-grid" style="margin-bottom:40px;">
+      <div class="trend-card men" onclick="filterAndGo('Men')">
+        <div class="trend-emoji">👔</div><div class="trend-label">Trending in</div>
+        <div class="trend-title">Men's Fashion</div><div class="trend-count" id="t-count-men">—</div>
+      </div>
+      <div class="trend-card women" onclick="filterAndGo('Women')">
+        <div class="trend-emoji">👗</div><div class="trend-label">Trending in</div>
+        <div class="trend-title">Women's Fashion</div><div class="trend-count" id="t-count-women">—</div>
+      </div>
+      <div class="trend-card kids" onclick="filterAndGo('Kids')">
+        <div class="trend-emoji">🧒</div><div class="trend-label">Trending in</div>
+        <div class="trend-title">Kids' Fashion</div><div class="trend-count" id="t-count-kids">—</div>
+      </div>
+    </div>
+    <div class="section-header"><div class="section-title">⭐ Best <span>Sellers</span></div></div>
+    <div class="products-grid" id="trends-bestsellers"><div class="loading-center"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Cart Page -->
+  <div class="page" id="app-cart">
+    <div class="section-title" style="margin-bottom:24px;">Your <span style="background:linear-gradient(135deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Cart</span></div>
+    <div id="cart-body"></div>
+  </div>
+</div>
+
+<script>
+  const API = '';
+  let allProducts = [];
+  let cart = JSON.parse(localStorage.getItem('shopzen_cart') || '{}');
+  let userToken = null;
+  let userName = '';
+  let pendingProduct = null;
+  let selectedModalSize = null;
+  let currentFilter = 'all';
+
+  function saveCart() { localStorage.setItem('shopzen_cart', JSON.stringify(cart)); updateCartCount(); }
+  function updateCartCount() {
+    let total = 0;
+    for (const id in cart) for (const size in cart[id]) total += cart[id][size];
+    document.getElementById('cart-count').textContent = total;
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast'); t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // ── Auth ──
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(tab + '-screen').classList.add('active');
+  }
+
+  async function signup() {
+    const name = document.getElementById('s-name').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    const password = document.getElementById('s-pass').value;
+    const errEl = document.getElementById('signup-err');
+    errEl.style.display = 'none';
+    if (!name || !email || !password) { errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block'; return; }
+    try {
+      const res = await fetch(`${API}/api/user/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        userToken = data.token; userName = name;
+        localStorage.setItem('shopzen_token', userToken);
+        localStorage.setItem('shopzen_name', userName);
+        bootApp();
+      } else { errEl.textContent = data.message; errEl.style.display = 'block'; }
+    } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  }
+
+  async function login() {
+    const email = document.getElementById('l-email').value.trim();
+    const password = document.getElementById('l-pass').value;
+    const errEl = document.getElementById('login-err');
+    errEl.style.display = 'none';
+    try {
+      const res = await fetch(`${API}/api/user/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        userToken = data.token;
+        // Decode name from JWT payload
+        try { const payload = JSON.parse(atob(data.token.split('.')[1])); userName = payload.name || email.split('@')[0]; } catch { userName = email.split('@')[0]; }
+        localStorage.setItem('shopzen_token', userToken);
+        localStorage.setItem('shopzen_name', userName);
+        bootApp();
+      } else { errEl.textContent = data.message || 'Invalid email or password.'; errEl.style.display = 'block'; }
+    } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  }
+
+  function logout() {
+    localStorage.removeItem('shopzen_token'); localStorage.removeItem('shopzen_name');
+    userToken = null; userName = '';
+    document.getElementById('app-screen').classList.remove('active');
+    document.getElementById('app-screen').style.display = 'none';
+    switchTab('signup');
+    document.getElementById('signup-screen').classList.add('active');
+  }
+
+  // ── Boot ──
+  window.onload = () => {
+    userToken = localStorage.getItem('shopzen_token');
+    userName = localStorage.getItem('shopzen_name') || '';
+    if (userToken) { bootApp(); }
+    updateCartCount();
+  };
+
+  async function bootApp() {
+    document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('app-screen').classList.add('active');
+    document.getElementById('user-name-display').textContent = userName;
+    document.getElementById('user-avatar').textContent = (userName[0] || 'U').toUpperCase();
+    await loadAllProducts();
+    renderHome();
+  }
+
+  async function loadAllProducts() {
+    try {
+      const res = await fetch(`${API}/api/product/list`);
+      const data = await res.json();
+      allProducts = (data.products || []).map(p => ({ ...p, _id: String(p.id) }));
+      document.getElementById('hs-products').textContent = allProducts.length + '+';
+    } catch (e) { console.error(e); }
+  }
+
+  // ── Navigation ──
+  function showAppPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    document.getElementById('app-' + name).classList.add('active');
+    const navEl = document.getElementById('nav-' + name);
+    if (navEl) navEl.classList.add('active');
+    if (name === 'shop') renderShop();
+    if (name === 'trends') renderTrends();
+    if (name === 'cart') renderCart();
+  }
+
+  function filterAndGo(cat) {
+    currentFilter = cat;
+    showAppPage('shop');
+    // highlight correct filter button
+    setTimeout(() => {
+      document.querySelectorAll('#shop-filters .filter-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent.trim() === cat || (cat === 'all' && b.textContent.trim() === 'All'));
+      });
+      renderShop();
+    }, 50);
+  }
+
+  // ── Render Home ──
+  function renderHome() {
+    const men = allProducts.filter(p => p.category === 'Men').length;
+    const women = allProducts.filter(p => p.category === 'Women').length;
+    const kids = allProducts.filter(p => p.category === 'Kids').length;
+    document.getElementById('count-men').textContent = men + ' products';
+    document.getElementById('count-women').textContent = women + ' products';
+    document.getElementById('count-kids').textContent = kids + ' products';
+
+    const bestSellers = allProducts.filter(p => p.bestSeller).slice(0, 8);
+    const gridEl = document.getElementById('bestsellers-grid');
+    if (bestSellers.length === 0) {
+      gridEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🛍</div><h3>No best sellers yet</h3><p>Products marked as best sellers will appear here.</p></div>`;
+    } else {
+      gridEl.innerHTML = bestSellers.map(p => productCard(p)).join('');
+    }
+  }
+
+  // ── Render Shop ──
+  function renderShop() {
+    let filtered = [...allProducts];
+    if (currentFilter !== 'all') {
+      filtered = filtered.filter(p => p.category === currentFilter || p.subCategory === currentFilter);
+    }
+    document.getElementById('product-count-label').textContent = `${filtered.length} items`;
+    const grid = document.getElementById('shop-grid');
+    grid.innerHTML = filtered.length === 0
+      ? `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">📦</div><h3>No products found</h3><p>Try a different filter.</p></div>`
+      : filtered.map(p => productCard(p)).join('');
+  }
+
+  function applyFilter(cat, btn) {
+    currentFilter = cat;
+    document.querySelectorAll('#shop-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderShop();
+  }
+
+  // ── Render Trends ──
+  function renderTrends() {
+    const men = allProducts.filter(p => p.category === 'Men').length;
+    const women = allProducts.filter(p => p.category === 'Women').length;
+    const kids = allProducts.filter(p => p.category === 'Kids').length;
+    document.getElementById('t-count-men').textContent = men + ' styles';
+    document.getElementById('t-count-women').textContent = women + ' styles';
+    document.getElementById('t-count-kids').textContent = kids + ' styles';
+    const bestSellers = allProducts.filter(p => p.bestSeller).slice(0, 8);
+    const el = document.getElementById('trends-bestsellers');
+    el.innerHTML = bestSellers.length === 0
+      ? `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">⭐</div><h3>No best sellers yet</h3></div>`
+      : bestSellers.map(p => productCard(p)).join('');
+  }
+
+  // ── Product Card ──
+  function productCard(p) {
+    const price = Number(p.price).toLocaleString();
+    const img = (Array.isArray(p.image) && p.image[0]) ? p.image[0] : '';
+    return `
+      <div class="product-card">
+        <div class="product-img">
+          ${img ? `<img src="${img}" alt="${p.name}" loading="lazy" />` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">No Image</div>'}
+          ${p.bestSeller ? '<div class="bestseller-badge">⭐ Best Seller</div>' : ''}
+        </div>
+        <div class="product-info">
+          <div class="product-cat">${p.category} · ${p.subCategory}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-price"><span class="currency">₹</span>${price}</div>
+        </div>
+        <div class="product-actions">
+          <button class="btn-add-cart" onclick="openSizePicker('${p._id}', '${p.name.replace(/'/g,"\\'")}', ${JSON.stringify(p.sizes)})">Add to Cart</button>
+          <button class="btn-wishlist">♡</button>
+        </div>
+      </div>`;
+  }
+
+  // ── Size Picker ──
+  function openSizePicker(productId, productName, sizes) {
+    pendingProduct = productId;
+    selectedModalSize = null;
+    document.getElementById('modal-product-name').textContent = productName;
+    const sizesEl = document.getElementById('modal-sizes');
+    const sizeArr = Array.isArray(sizes) ? sizes : (typeof sizes === 'string' ? JSON.parse(sizes) : []);
+    sizesEl.innerHTML = sizeArr.map(s => `<button class="modal-size" onclick="selectSize(this, '${s}')">${s}</button>`).join('');
+    document.getElementById('size-modal').classList.add('open');
+  }
+
+  function selectSize(btn, size) {
+    document.querySelectorAll('.modal-size').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedModalSize = size;
+  }
+
+  function closeModal() { document.getElementById('size-modal').classList.remove('open'); pendingProduct = null; selectedModalSize = null; }
+
+  function confirmAddToCart() {
+    if (!selectedModalSize) { showToast('Please select a size!', 'error'); return; }
+    if (!cart[pendingProduct]) cart[pendingProduct] = {};
+    cart[pendingProduct][selectedModalSize] = (cart[pendingProduct][selectedModalSize] || 0) + 1;
+    saveCart();
+    showToast('✅ Added to cart!', 'success');
+    closeModal();
+  }
+
+  // ── Cart ──
+  function renderCart() {
+    const el = document.getElementById('cart-body');
+    const items = [];
+    for (const id in cart) {
+      const product = allProducts.find(p => p._id === id);
+      if (!product) continue;
+      for (const size in cart[id]) {
+        if (cart[id][size] > 0) items.push({ product, size, qty: cart[id][size] });
+      }
+    }
+    if (items.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><h3>Your cart is empty</h3><p>Start shopping to add items to your cart.</p><button class="btn-hero primary" onclick="showAppPage('shop')" style="margin-top:20px;">Shop Now</button></div>`;
+      return;
+    }
+    const total = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+    el.innerHTML = `
+      <div style="max-width:700px;">
+        ${items.map(item => `
+          <div style="display:flex;align-items:center;gap:20px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;">
+            <img src="${item.product.image?.[0] || ''}" alt="" style="width:80px;height:80px;border-radius:10px;object-fit:cover;background:var(--surface2);" />
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${item.product.name}</div>
+              <div style="color:var(--muted);font-size:13px;">Size: ${item.size} · Qty: ${item.qty}</div>
+              <div style="font-size:16px;font-weight:800;color:var(--accent2);margin-top:6px;">₹${(item.product.price * item.qty).toLocaleString()}</div>
+            </div>
+            <button onclick="removeFromCart('${item.product._id}','${item.size}')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button>
+          </div>`).join('')}
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <span style="font-size:18px;font-weight:700;">Total</span>
+            <span style="font-size:24px;font-weight:800;color:var(--accent2);">₹${total.toLocaleString()}</span>
+          </div>
+          <button class="btn-auth" onclick="showToast('Checkout coming soon!','success')" style="margin:0;">Proceed to Checkout →</button>
+        </div>
+      </div>`;
+  }
+
+  function removeFromCart(id, size) {
+    if (cart[id]) { delete cart[id][size]; if (Object.keys(cart[id]).length === 0) delete cart[id]; }
+    saveCart(); renderCart(); showToast('Item removed.', 'success');
+  }
+
+  window.onclick = (e) => { if (e.target.id === 'size-modal') closeModal(); };
+</script>
+</body>
+</html>

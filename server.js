@@ -27,6 +27,11 @@ app.get("/admin", (req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
 });
 
+// INFO: User portal route
+app.get("/app", (req, res) => {
+  res.sendFile(join(__dirname, "public", "app.html"));
+});
+
 // INFO: Middleware
 app.use(express.json());
 app.use(cors({
