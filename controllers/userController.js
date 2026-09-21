@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
-import userModel from "../models/userModel.js";
+import prisma from "../config/db.js";
 
 // INFO: Function to create token
 const createToken = (id) => {
@@ -13,7 +13,7 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await userModel.findOne({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       return res
@@ -24,7 +24,7 @@ const loginUser = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (isPasswordCorrect) {
-      const token = createToken(user._id);
+      const token = createToken(user.id);
       res.status(200).json({ success: true, token });
     } else {
       res
@@ -43,7 +43,7 @@ const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
 
     // INFO: Check if user already exists
-    const userExists = await userModel.findOne({ email });
+    const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
       return res
         .status(400)
@@ -66,17 +66,17 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // INFO: Create new user
-    const newUser = new userModel({
-      name,
-      email,
-      password: hashedPassword,
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        cartData: {},
+      },
     });
 
-    // INFO: Save user to database
-    const user = await newUser.save();
-
     // INFO: Create token
-    const token = createToken(user._id);
+    const token = createToken(user.id);
 
     // INFO: Return success response
     res.status(200).json({ success: true, token });

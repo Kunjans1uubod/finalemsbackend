@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import productModel from "../models/productModel.js";
+import prisma from "../config/db.js";
 
 // INFO: Route for adding a product
 const addProduct = async (req, res) => {
@@ -32,20 +32,19 @@ const addProduct = async (req, res) => {
       })
     );
 
-    const productData = {
-      name,
-      description,
-      price: Number(price),
-      category,
-      subCategory,
-      sizes: JSON.parse(sizes),
-      bestSeller: bestSeller === "true" ? true : false,
-      image: imageUrls,
-      date: Date.now(),
-    };
-
-    const product = new productModel(productData);
-    await product.save();
+    await prisma.product.create({
+      data: {
+        name,
+        description,
+        price: Number(price),
+        category,
+        subCategory,
+        sizes: JSON.parse(sizes),
+        bestSeller: bestSeller === "true" ? true : false,
+        image: imageUrls,
+        date: BigInt(Date.now()),
+      },
+    });
 
     res.status(201).json({ success: true, message: "Product added" });
   } catch (error) {
@@ -57,8 +56,14 @@ const addProduct = async (req, res) => {
 // INFO: Route for fetching all products
 const listProducts = async (req, res) => {
   try {
-    const products = await productModel.find({});
-    res.status(200).json({ success: true, products });
+    const products = await prisma.product.findMany();
+    // INFO: Convert BigInt date to Number for JSON serialization
+    const serialized = products.map((p) => ({
+      ...p,
+      id: p.id.toString(),
+      date: p.date.toString(),
+    }));
+    res.status(200).json({ success: true, products: serialized });
   } catch (error) {
     console.log("Error while fetching all products: ", error);
     res.status(500).json({ success: false, message: error.message });
@@ -68,7 +73,7 @@ const listProducts = async (req, res) => {
 // INFO: Route for removing a product
 const removeProduct = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.body.id);
+    await prisma.product.delete({ where: { id: Number(req.body.id) } });
     res.status(200).json({ success: true, message: "Product removed" });
   } catch (error) {
     console.log("Error while removing product: ", error);
@@ -80,9 +85,13 @@ const removeProduct = async (req, res) => {
 const getSingleProduct = async (req, res) => {
   try {
     const { productId } = req.body;
-    const product = await productModel.findById(productId);
-
-    res.status(200).json({ success: true, product });
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+    });
+    const serialized = product
+      ? { ...product, id: product.id.toString(), date: product.date.toString() }
+      : null;
+    res.status(200).json({ success: true, product: serialized });
   } catch (error) {
     console.log("Error while fetching single product: ", error);
     res.status(500).json({ success: false, message: error.message });
